@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: workspace-spark
+  namespace: spark
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: awsebscsiprovisioner
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-notebook
+  namespace: spark
+  labels:
+    instance-name: spark-notebook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      instance-name: spark-notebook
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        instance-name: spark-notebook
+    spec:
+      securityContext:
+        runAsUser: 1000
+      serviceAccountName: spark-sa
+      containers:
+      - name: spark-notebook
+        image: akirillov/jupyter:kubeflow-spark
+        imagePullPolicy: Always
+        command: [ "sh", "-c", "sleep 2h" ]
+        env: []
+        resources:
+          limits: {}
+          requests:
+            cpu: "2"
+            memory: 4.0Gi
+        volumeMounts:
+          - mountPath: /home/jovyan
+            name: workspace-spark
+          - mountPath: /dev/shm
+            name: dshm
+        ports:
+        - containerPort: 8888
+          name: "notebook-port"
+      volumes:
+        - name: workspace-spark
+          persistentVolumeClaim:
+            claimName: workspace-spark
+        - emptyDir:
+            medium: Memory
+          name: dshm

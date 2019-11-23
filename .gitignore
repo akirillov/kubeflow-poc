@@ -1,0 +1,7 @@
+.konvoy-*
+kf-demo
+runs
+state
+cluster.*
+*.pem
+*.pub
