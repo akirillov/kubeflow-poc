@@ -31,8 +31,17 @@ RUN rm ${SPARK_HOME}/jars/kubernetes-client-4.1.2.jar
 ADD https://repo1.maven.org/maven2/io/fabric8/kubernetes-client/4.4.2/kubernetes-client-4.4.2.jar ${SPARK_HOME}/jars
 ADD log4j.properties ${SPARK_HOME}/conf
 
-RUN pip3 install --upgrade toree \
+RUN pip3 install --upgrade pip \
+    && pip3 install --upgrade \
+    toree \
+    matplotlib \
+    py4j \
     && jupyter toree install --spark_home=${SPARK_HOME} --toree_opts='--nosparkcontext' \
     && chown -R ${NB_USER}:users ${SPARK_HOME} /opt/entrypoint.sh
+
+ENV PYTHONPATH=${SPARK_HOME}/python:$PYTHONPATH \
+    PYSPARK_DRIVER_PYTHON="jupyter" \
+    PYSPARK_DRIVER_PYTHON_OPTS="notebook" \
+    PYSPARK_PYTHON=python3
 
 USER jovyan
