@@ -1,4 +1,4 @@
-FROM openjdk:8-alpine
+FROM horovod/horovod:0.18.2-tf2.0.0-torch1.3.0-mxnet1.5.0-py3.6-cpu
 
 ARG SPARK_HOME=/opt/spark
 ARG SPARK_DIST=/dist
@@ -6,19 +6,21 @@ ENV SPARK_HOME ${SPARK_HOME}
 ARG SPARK_DIST_NAME="spark-2.4.3-hadoop-2.9-k8s"
 ARG SPARK_DIST_URL="https://downloads.mesosphere.io/spark/assets/${SPARK_DIST_NAME}.tgz"
 
-RUN set -ex && \
-    apk upgrade --no-cache && \
-    ln -s /lib /lib64 && \
-    apk add --no-cache bash tini libc6-compat linux-pam nss gnupg procps python3 && \
-    mkdir -p ${SPARK_HOME}/work-dir && \
-    touch ${SPARK_HOME}/RELEASE && \
-    rm /bin/sh && \
-    ln -sv /bin/bash /bin/sh && \
-    echo "auth required pam_wheel.so use_uid" >> /etc/pam.d/su && \
-    chgrp root /etc/passwd && chmod ug+rw /etc/passwd && \
-    rm -rf /var/cache/apk/*
+ARG JAVA_VERSION="8u212b03"
+ENV JAVA_HOME /usr/lib/jvm/${JAVA_VERSION}
+ARG JRE_DOWNLOAD_URL="https://downloads.mesosphere.com/java/openjdk-jre-${JAVA_VERSION}-hotspot-linux-x64.tar.gz"
 
-RUN mkdir -p ${SPARK_DIST} && \
+ENV PATH=$PATH:${SPARK_HOME}/bin:${JAVA_HOME}/bin
+
+RUN apt-get update && apt-get install -y \
+      curl \
+      git \
+      gpg \
+      wget && \
+    mkdir -p ${JAVA_HOME} \
+    && curl -L ${JRE_DOWNLOAD_URL} | tar -C ${JAVA_HOME} --strip-components=1 -zx
+
+RUN mkdir -p ${SPARK_HOME} ${SPARK_DIST} && \
     cd ${SPARK_DIST} && \
     wget ${SPARK_DIST_URL} && wget ${SPARK_DIST_URL}.sha512 && \
     gpg --print-md sha512 ${SPARK_DIST_NAME}.tgz | diff - ${SPARK_DIST_NAME}.tgz.sha512 && \
@@ -27,10 +29,6 @@ RUN mkdir -p ${SPARK_DIST} && \
     mv kubernetes/dockerfiles/spark/entrypoint.sh /opt && \
     mv kubernetes/tests ${SPARK_HOME} && \
     rm -rf ${SPARK_DIST}
-
-RUN python3 -m pip install --upgrade pip \
-    && python3 -m pip install \
-       py4j
 
 WORKDIR ${SPARK_HOME}
 
@@ -46,5 +44,8 @@ COPY conf/metrics.properties /etc/metrics/conf
 COPY conf/prometheus.yaml /etc/metrics/conf
 
 WORKDIR ${SPARK_HOME}/work-dir
+
+ADD https://github.com/krallin/tini/releases/download/v0.18.0/tini /sbin/tini
+RUN chmod +x /sbin/tini
 
 ENTRYPOINT [ "/opt/entrypoint.sh" ]

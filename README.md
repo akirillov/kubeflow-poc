@@ -97,5 +97,12 @@ Expected output:
 
 ![](resources/images/matplotlib_histogram.png)
 
+# Tensorflow & Horovod
+## Notebooks
+
+* [MNIST Tensorflow](notebooks/MNIST%20Tensorflow.ipynb) - a vanilla Tensorflow example for MNIST
+* [MNIST Horovod](notebooks/MNIST%20Horovod.ipynb) - MNIST training using Horovod with Tensorflow (non-distributed mode, CPU)
+* [MNIST Horovod Spark](notebooks/MNIST%20Horovod%20Spark.ipynb) - currently WIP, MNIST training using Horovod with Tensorflow for training and Spark for parallelization
+
 # TODO
 * pass namespace, master, and pod IP to configuration automatically (https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/#use-pod-fields-as-values-for-environment-variables)

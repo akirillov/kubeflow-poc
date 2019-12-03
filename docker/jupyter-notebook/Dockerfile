@@ -31,11 +31,29 @@ RUN rm ${SPARK_HOME}/jars/kubernetes-client-4.1.2.jar
 ADD https://repo1.maven.org/maven2/io/fabric8/kubernetes-client/4.4.2/kubernetes-client-4.4.2.jar ${SPARK_HOME}/jars
 ADD log4j.properties ${SPARK_HOME}/conf
 
+# Install Open MPI
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential \
+      cmake \
+      g++-4.8 \
+    && mkdir /tmp/openmpi && \
+    cd /tmp/openmpi && \
+    wget https://www.open-mpi.org/software/ompi/v4.0/downloads/openmpi-4.0.0.tar.gz && \
+    tar zxf openmpi-4.0.0.tar.gz && \
+    cd openmpi-4.0.0 && \
+    ./configure --enable-orterun-prefix-by-default && \
+    make -j $(nproc) all && \
+    make install && \
+    ldconfig && \
+    rm -rf /tmp/openmpi
+
 RUN pip3 install --upgrade pip \
     && pip3 install --upgrade \
-    toree \
+    horovod \
     matplotlib \
+    plotly \
     py4j \
+    toree \
     && jupyter toree install --spark_home=${SPARK_HOME} --toree_opts='--nosparkcontext' \
     && chown -R ${NB_USER}:users ${SPARK_HOME} /opt/entrypoint.sh
 
