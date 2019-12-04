@@ -48,4 +48,9 @@ WORKDIR ${SPARK_HOME}/work-dir
 ADD https://github.com/krallin/tini/releases/download/v0.18.0/tini /sbin/tini
 RUN chmod +x /sbin/tini
 
+RUN pip3 install --upgrade py4j
+
+ENV PYTHONPATH=${SPARK_HOME}/python:$PYTHONPATH \
+    PYSPARK_PYTHON=python3
+
 ENTRYPOINT [ "/opt/entrypoint.sh" ]

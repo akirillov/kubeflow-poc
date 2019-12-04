@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - env: []
-        image: akirillov/jupyter:kubeflow-spark
+        image: akirillov/jupyter:kubeflow-spark-horovod
         name: spark-notebook
         resources:
           limits: {}
