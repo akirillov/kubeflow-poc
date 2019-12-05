@@ -1,9 +1,8 @@
-FROM horovod/horovod:0.18.2-tf2.0.0-torch1.3.0-mxnet1.5.0-py3.6-cpu
+FROM akirillov/horovod:master-tf2.0.0-torch1.3.0-mxnet1.5.0-py3.6-cpu
 
 ENV SPARK_USER spark
 ENV SPARK_UID 1000
 ENV HOME /home/$SPARK_USER
-ENV NB_PREFIX /
 
 # Use bash instead of sh
 SHELL ["/bin/bash", "-c"]
