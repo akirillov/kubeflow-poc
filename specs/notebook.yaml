@@ -28,7 +28,7 @@ spec:
         resources:
           limits: {}
           requests:
-            cpu: "2"
+            cpu: "5"
             memory: 4.0Gi
         volumeMounts:
           - mountPath: /home/jovyan

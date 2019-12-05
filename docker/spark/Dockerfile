@@ -1,5 +1,17 @@
 FROM horovod/horovod:0.18.2-tf2.0.0-torch1.3.0-mxnet1.5.0-py3.6-cpu
 
+ENV SPARK_USER spark
+ENV SPARK_UID 1000
+ENV HOME /home/$SPARK_USER
+ENV NB_PREFIX /
+
+# Use bash instead of sh
+SHELL ["/bin/bash", "-c"]
+# Create SPARK_USER user with UID=1000 and in the 'users' group
+RUN useradd -M -s /bin/bash -N -u $SPARK_UID $SPARK_USER && \
+    chown -R ${SPARK_USER}:users /usr/local/bin && \
+    mkdir $HOME
+
 ARG SPARK_HOME=/opt/spark
 ARG SPARK_DIST=/dist
 ENV SPARK_HOME ${SPARK_HOME}
@@ -30,27 +42,27 @@ RUN mkdir -p ${SPARK_HOME} ${SPARK_DIST} && \
     mv kubernetes/tests ${SPARK_HOME} && \
     rm -rf ${SPARK_DIST}
 
-WORKDIR ${SPARK_HOME}
-
 # https://github.com/GoogleCloudPlatform/spark-on-k8s-operator/issues/591
-RUN rm jars/kubernetes-client-4.1.2.jar
-ADD https://repo1.maven.org/maven2/io/fabric8/kubernetes-client/4.4.2/kubernetes-client-4.4.2.jar jars
+RUN rm ${SPARK_HOME}/jars/kubernetes-client-4.1.2.jar
+ADD https://repo1.maven.org/maven2/io/fabric8/kubernetes-client/4.4.2/kubernetes-client-4.4.2.jar ${SPARK_HOME}/jars
 
 # Setup for the Prometheus JMX exporter.
-RUN mkdir -p /etc/metrics/conf
+RUN mkdir -p ${SPARK_HOME}/etc/metrics/conf
 # Add the Prometheus JMX exporter Java agent jar for exposing metrics sent to the JmxSink to Prometheus.
-ADD https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.11.0/jmx_prometheus_javaagent-0.11.0.jar /prometheus/
-COPY conf/metrics.properties /etc/metrics/conf
-COPY conf/prometheus.yaml /etc/metrics/conf
+ADD https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.11.0/jmx_prometheus_javaagent-0.11.0.jar ${SPARK_HOME}/prometheus/
+COPY conf/metrics.properties ${SPARK_HOME}/etc/metrics/conf
+COPY conf/prometheus.yaml ${SPARK_HOME}/etc/metrics/conf
 
-WORKDIR ${SPARK_HOME}/work-dir
+WORKDIR ${SPARK_HOME}
 
 ADD https://github.com/krallin/tini/releases/download/v0.18.0/tini /sbin/tini
-RUN chmod +x /sbin/tini
-
-RUN pip3 install --upgrade py4j
+RUN chmod +x /sbin/tini && \
+    chown -R ${SPARK_USER}:users ${SPARK_HOME} /opt/entrypoint.sh && \
+    pip3 install --upgrade py4j
 
 ENV PYTHONPATH=${SPARK_HOME}/python:$PYTHONPATH \
     PYSPARK_PYTHON=python3
+
+USER $SPARK_USER
 
 ENTRYPOINT [ "/opt/entrypoint.sh" ]
