@@ -82,6 +82,8 @@ Expected output:
 * [MNIST Horovod](notebooks/MNIST%20Horovod.ipynb) - MNIST training using Horovod with Tensorflow (local mode, CPU)
 * [Horovod Spark](notebooks/Horovod%20Spark.ipynb) - a simple example of Horovod-Spark integration
 * [MNIST Horovod Spark](notebooks/MNIST%20Horovod%20Spark.ipynb) - MNIST training using Horovod with Tensorflow for training and Spark for parallelization
+* [MNIST Spark Horovod ETL-ML](notebooks/MNIST%20Spark%20Horovod%20ETL-ML.ipynb) - MNIST training using Spark to read the data and then pass to Tensorflow using Horovod for broadcasting variables
+
 
 # Docker images
 This repo contains the following Dockerfiles used in specs, examples, and notebooks:
